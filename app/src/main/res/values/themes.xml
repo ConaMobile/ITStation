@@ -1,0 +1,7 @@
+<resources>
+
+    <style name="Theme.ITStation" parent="Theme.MaterialComponents.Light.NoActionBar">
+        <item name="android:statusBarColor">@color/statusColor</item>
+        <item name="android:fitsSystemWindows">true</item>
+    </style>
+</resources>
