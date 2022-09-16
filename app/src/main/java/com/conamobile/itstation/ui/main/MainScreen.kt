@@ -53,6 +53,10 @@ fun MainScreen(navController: NavController) {
     var imageIsLoading by remember {
         mutableStateOf(false)
     }
+    val currentPage = remember {
+        pagerState.currentPage
+    }
+
     for (i in 0..20) list.add(Models("name $i", "number $i"))
     val imageList by viewModel.itStationImages.observeAsState(emptyList())
     if (imageList.isNotEmpty()) imageIsLoading = true
@@ -68,7 +72,8 @@ fun MainScreen(navController: NavController) {
                             state = pagerState,
                             modifier = Modifier
                                 .height(250.dp)
-                                .fillMaxWidth()) { page ->
+                                .fillMaxWidth()
+                        ) { page ->
                             val item = imageList[page]
                             Card(Modifier
                                 .fillMaxSize()
@@ -84,7 +89,8 @@ fun MainScreen(navController: NavController) {
                                     alpha = lerp(start = 0.5f,
                                         stop = 1f,
                                         fraction = 1f - pageOffset.coerceIn(0f, 1f))
-                                }) {
+                                }
+                            ) {
                                 GlideImage(imageModel = item.it_station_image,
                                     modifier = Modifier.fillMaxSize(),
                                     requestOptions = {
@@ -93,15 +99,75 @@ fun MainScreen(navController: NavController) {
                                     })
                             }
 
-                            alwaysReturnFun {
-                                scope.launch {
-                                    if (imageIsLoading) {
-                                        if (pagerState.currentPage != imageList.size - 1) pagerState.animateScrollToPage(
-                                            pagerState.currentPage + 1)
-                                        else pagerState.animateScrollToPage(0)
+                            LaunchedEffect(key1 = currentPage) {
+                                alwaysReturnFun {
+                                    scope.launch {
+                                        if (imageIsLoading) {
+                                            if (pagerState.currentPage != pagerState.pageCount - 1) pagerState.animateScrollToPage(
+                                                pagerState.currentPage + 1)
+                                            else pagerState.animateScrollToPage(0)
+                                        }
                                     }
                                 }
                             }
+
+                            ////
+//                            val isDragged by pagerState.interactionSource.collectIsDraggedAsState()
+//                            if (!isDragged) {
+//                                LaunchedEffect(Unit) {
+//                                    repeat(
+//                                        times = Int.MAX_VALUE,
+//                                        action = {
+//                                            delay(
+//                                                timeMillis = 4000
+//                                            )
+//                                            pagerState.animateScrollToPage(
+//                                                page = if (pagerState.currentPage != imageList.size - 1) pagerState.currentPage + 1 else 0
+//                                            )
+//                                        }
+//                                    )
+//                                }
+//                            }
+////////
+//                            LaunchedEffect(
+//                                key1 = Unit,
+//                                block = {
+//                                    repeat(
+//                                        times = Int.MAX_VALUE,
+//                                        action = {
+//                                            delay(
+//                                                timeMillis = 4000
+//                                            )
+//                                            try {
+//                                                pagerState.animateScrollToPage(
+//                                                    page = if (pagerState.currentPage != imageList.size - 1) pagerState.currentPage + 1 else 0
+//                                                )
+//                                            } catch (_: Throwable) {
+//                                            }
+//                                        }
+//                                    )
+//                                })
+//                            LaunchedEffect(key1 = pagerState.currentPage) {
+//                                alwaysReturnFun {
+//                                    scope.launch {
+//                                        if (imageIsLoading) {
+//                                            if (pagerState.currentPage != imageList.size - 1) pagerState.animateScrollToPage(
+//                                                pagerState.currentPage + 1)
+//                                            else pagerState.animateScrollToPage(0)
+//                                        }
+//                                    }
+//                                }
+//                            }
+//                            LaunchedEffect(key1 = pagerState.currentPage) {
+//                                launch {
+//                                    delay(4000)
+//                                    with(pagerState) {
+//                                        val target =
+//                                            if (currentPage < pageCount - 1) currentPage + 1 else 0
+//                                        animateScrollToPage(page = target)
+//                                    }
+//                                }
+//                            }
                         }
                     } else {
                         CircularProgressIndicator(color = Yellow,
@@ -135,7 +201,7 @@ fun LazyItem(models: Models) {
     }
 }
 
-fun alwaysReturnFun(delayMs: Long = 4000, onReturn: () -> Unit) {
+fun alwaysReturnFun(delayMs: Long = 4000, onReturn: () -> Unit = {}) {
     val handler = Handler(Looper.getMainLooper())
     handler.postDelayed(object : Runnable {
         override fun run() {
